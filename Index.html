@@ -1,0 +1,855 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Deriv Edge · Trading Platform</title>
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0b0e14;
+      color: #e9edf2;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---------- UTILITY ---------- */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 20px;
+      width: 100%;
+    }
+
+    .flex {
+      display: flex;
+      align-items: center;
+    }
+
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+
+    .text-muted { color: #8b96a8; }
+    .text-green { color: #0ecb81; }
+    .text-red { color: #f6465d; }
+    .text-white { color: #ffffff; }
+
+    .bg-card {
+      background: #151b24;
+      border-radius: 20px;
+      border: 1px solid #232b36;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: #1a5cff;
+      color: white;
+      box-shadow: 0 4px 12px rgba(26, 92, 255, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: #0b4aee;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #2e3a48;
+      color: #e9edf2;
+    }
+
+    .btn-outline:hover {
+      background: #1f2833;
+      border-color: #4a5c72;
+    }
+
+    .btn-green {
+      background: #0ecb81;
+      color: #0b0e14;
+    }
+
+    .btn-green:hover {
+      background: #0bad6c;
+    }
+
+    .btn-red {
+      background: #f6465d;
+      color: white;
+    }
+
+    .btn-red:hover {
+      background: #d93c52;
+    }
+
+    /* ---------- HEADER / NAV ---------- */
+    .navbar {
+      background: #0f131a;
+      border-bottom: 1px solid #1f2732;
+      padding: 12px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo i {
+      color: #1a5cff;
+      font-size: 1.9rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .nav-links a {
+      color: #a6b1c2;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: white;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      background: #1f2a36;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #e9edf2;
+      border: 1px solid #2e3a48;
+      cursor: pointer;
+    }
+
+    /* ---------- MAIN LAYOUT ---------- */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      padding: 24px 0 40px;
+    }
+
+    /* ----- LEFT: Chart & Trade Panel ----- */
+    .chart-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chart-card {
+      background: #151b24;
+      border-radius: 24px;
+      padding: 20px;
+      border: 1px solid #232b36;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .pair-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pair-icon {
+      background: #1f2a36;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: #f0b90b;
+    }
+
+    .pair-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .price-change {
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 40px;
+      background: rgba(14, 203, 129, 0.12);
+      color: #0ecb81;
+    }
+
+    .price-large {
+      font-size: 1.9rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 280px;
+      width: 100%;
+      margin: 12px 0 6px;
+    }
+
+    .timeframe-tabs {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .timeframe-tabs button {
+      background: transparent;
+      border: 1px solid #2a3441;
+      color: #9aa6b8;
+      padding: 4px 14px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .timeframe-tabs button.active {
+      background: #1a5cff;
+      border-color: #1a5cff;
+      color: white;
+    }
+
+    .timeframe-tabs button:hover:not(.active) {
+      background: #1f2833;
+      color: white;
+    }
+
+    /* Trade panel */
+    .trade-panel {
+      background: #151b24;
+      border-radius: 24px;
+      padding: 20px;
+      border: 1px solid #232b36;
+    }
+
+    .trade-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      background: #0f131a;
+      padding: 4px;
+      border-radius: 40px;
+    }
+
+    .trade-tabs button {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #8b96a8;
+      padding: 10px;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.15s;
+    }
+
+    .trade-tabs button.active {
+      background: #1f2a36;
+      color: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .trade-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #8b96a8;
+      letter-spacing: 0.3px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .input-field {
+      background: #0f131a;
+      border: 1px solid #2a3441;
+      border-radius: 14px;
+      padding: 12px 16px;
+      color: white;
+      font-weight: 500;
+      font-size: 1rem;
+      width: 100%;
+      outline: none;
+      transition: border 0.15s;
+    }
+
+    .input-field:focus {
+      border-color: #1a5cff;
+    }
+
+    .quick-amounts {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .quick-amounts span {
+      background: #1f2a36;
+      padding: 6px 12px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #b6c1d0;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .quick-amounts span:hover {
+      background: #2b3747;
+      color: white;
+    }
+
+    .trade-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .trade-actions button {
+      flex: 1;
+      padding: 14px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    .stake-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #8b96a8;
+      margin-top: 6px;
+    }
+
+    /* ----- RIGHT: Sidebar (positions, admin) ----- */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px 8px;
+    }
+
+    .card-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #b6c1d0;
+    }
+
+    .positions-list {
+      padding: 0 8px 12px;
+    }
+
+    .position-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 12px;
+      border-radius: 12px;
+      transition: background 0.1s;
+    }
+
+    .position-item:hover {
+      background: #1a212b;
+    }
+
+    .position-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .position-icon {
+      width: 36px;
+      height: 36px;
+      background: #1f2a36;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .position-details p:first-child {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .position-details p:last-child {
+      font-size: 0.75rem;
+      color: #8b96a8;
+    }
+
+    .position-pnl {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .admin-panel {
+      padding: 18px 20px 20px;
+    }
+
+    .admin-panel h3 {
+      font-size: 1rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .admin-panel h3 i {
+      color: #1a5cff;
+    }
+
+    .admin-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .admin-stat {
+      text-align: center;
+    }
+
+    .admin-stat .label {
+      font-size: 0.75rem;
+      color: #8b96a8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .admin-stat .value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .admin-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .admin-actions button {
+      padding: 12px;
+      border-radius: 12px;
+      background: #1f2a36;
+      border: 1px solid #2e3a48;
+      color: #d0d8e3;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .admin-actions button:hover {
+      background: #2a3749;
+      color: white;
+      border-color: #3f5063;
+    }
+
+    .admin-actions button i {
+      color: #1a5cff;
+      width: 18px;
+    }
+
+    /* ---------- MOBILE RESPONSIVENESS ---------- */
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .sidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .navbar .container {
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .nav-actions {
+        margin-left: auto;
+      }
+
+      .sidebar {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .price-large {
+        font-size: 1.6rem;
+      }
+
+      .trade-actions {
+        flex-direction: column;
+      }
+
+      .main-grid {
+        padding: 16px 0 30px;
+      }
+
+      .container {
+        padding: 0 16px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .pair-info {
+        flex-wrap: wrap;
+      }
+
+      .trade-tabs button {
+        font-size: 0.8rem;
+        padding: 8px 4px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* small tweaks */
+    .sticky-bottom-note {
+      font-size: 0.7rem;
+      color: #5b697b;
+      text-align: center;
+      padding: 20px 0 12px;
+    }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="container">
+      <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <span>Deriv Edge</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#">Trade</a>
+        <a href="#">Portfolio</a>
+        <a href="#">Markets</a>
+        <a href="#">Academy</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-outline" style="padding:8px 18px;">
+          <i class="fas fa-wallet"></i> $10,240.50
+        </button>
+        <div class="avatar">JD</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <div class="container main-grid">
+    <!-- LEFT COLUMN: Chart + Trade Panel -->
+    <div class="chart-section">
+      <!-- Price Chart Card -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="pair-info">
+            <div class="pair-icon">
+              <i class="fab fa-bitcoin"></i>
+            </div>
+            <div>
+              <div class="flex gap-2" style="align-items: center;">
+                <span class="pair-name">BTC/USD</span>
+                <span class="price-change"><i class="fas fa-arrow-up"></i> +3.24%</span>
+              </div>
+              <div class="flex gap-3" style="margin-top:2px;">
+                <span class="price-large">$64,320.50</span>
+                <span class="text-muted" style="font-size:0.9rem;">≈ 1.0000 BTC</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-outline" style="padding:8px 16px;"><i class="fas fa-star"></i></button>
+            <button class="btn btn-outline" style="padding:8px 16px;"><i class="fas fa-expand"></i></button>
+          </div>
+        </div>
+
+        <!-- Chart canvas -->
+        <div class="chart-container">
+          <canvas id="priceChart" width="600" height="280" style="width:100%; height:100%;"></canvas>
+        </div>
+
+        <!-- Timeframe selector -->
+        <div class="timeframe-tabs">
+          <button class="active">1H</button>
+          <button>4H</button>
+          <button>1D</button>
+          <button>1W</button>
+          <button>1M</button>
+        </div>
+      </div>
+
+      <!-- Trade Panel -->
+      <div class="trade-panel">
+        <div class="trade-tabs">
+          <button class="active">Buy / Long</button>
+          <button>Sell / Short</button>
+        </div>
+
+        <div class="trade-form">
+          <div class="input-group">
+            <label>Stake amount (USD)</label>
+            <div class="input-row">
+              <input type="text" class="input-field" value="100.00" id="stakeInput">
+              <button class="btn btn-outline" style="padding:0 20px; border-radius:14px;">
+                <i class="fas fa-dollar-sign"></i>
+              </button>
+            </div>
+            <div class="quick-amounts">
+              <span>$10</span>
+              <span>$25</span>
+              <span>$50</span>
+              <span>$100</span>
+              <span>$250</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Take profit / Stop loss (optional)</label>
+            <div class="input-row">
+              <input type="text" class="input-field" placeholder="TP" style="flex:1;">
+              <input type="text" class="input-field" placeholder="SL" style="flex:1;">
+            </div>
+          </div>
+
+          <div class="stake-info">
+            <span>Potential profit: <strong class="text-green">+$24.50</strong></span>
+            <span>Payout: 92%</span>
+          </div>
+
+          <div class="trade-actions">
+            <button class="btn-green"><i class="fas fa-arrow-up"></i> Buy / Long</button>
+            <button class="btn-red"><i class="fas fa-arrow-down"></i> Sell / Short</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Sidebar -->
+    <div class="sidebar">
+      <!-- Open Positions -->
+      <div class="bg-card">
+        <div class="card-header">
+          <h3><i class="fas fa-chart-pie" style="margin-right:6px;"></i> Open positions</h3>
+          <span class="text-muted" style="font-size:0.8rem;">3 active</span>
+        </div>
+        <div class="positions-list">
+          <div class="position-item">
+            <div class="position-left">
+              <div class="position-icon" style="color:#f0b90b;">₿</div>
+              <div class="position-details">
+                <p>BTC/USD</p>
+                <p>Long · 0.05 BTC</p>
+              </div>
+            </div>
+            <div class="position-pnl text-green">+$128.40</div>
+          </div>
+          <div class="position-item">
+            <div class="position-left">
+              <div class="position-icon" style="color:#627eea;">Ξ</div>
+              <div class="position-details">
+                <p>ETH/USD</p>
+                <p>Short · 2.5 ETH</p>
+              </div>
+            </div>
+            <div class="position-pnl text-red">-$32.20</div>
+          </div>
+          <div class="position-item">
+            <div class="position-left">
+              <div class="position-icon" style="color:#f7931a;">₿</div>
+              <div class="position-details">
+                <p>BTC/USD</p>
+                <p>Long · 0.02 BTC</p>
+              </div>
+            </div>
+            <div class="position-pnl text-green">+$44.10</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Dashboard Preview -->
+      <div class="bg-card admin-panel">
+        <h3><i class="fas fa-shield-alt"></i> Admin dashboard</h3>
+        <div class="admin-stats">
+          <div class="admin-stat">
+            <div class="label">Users</div>
+            <div class="value">2,481</div>
+          </div>
+          <div class="admin-stat">
+            <div class="label">Volume</div>
+            <div class="value">$4.2M</div>
+          </div>
+          <div class="admin-stat">
+            <div class="label">Trades</div>
+            <div class="value">9.3k</div>
+          </div>
+        </div>
+        <div class="admin-actions">
+          <button><i class="fas fa-users-cog"></i> Manage users</button>
+          <button><i class="fas fa-chart-bar"></i> Risk monitor</button>
+          <button><i class="fas fa-cog"></i> Platform settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container sticky-bottom-note">
+    <i class="fas fa-lock" style="margin-right:6px;"></i> 256-bit SSL secured · Demo environment · © 2025 Deriv Edge
+  </div>
+
+  <!-- Chart.js initialization & basic interactivity -->
+  <script>
+    (function() {
+      // ----- PRICE CHART (realistic random walk) -----
+      const ctx = document.getElementById('priceChart').getContext('2d');
+
+      // Generate realistic data: start at 63500, small random walk
+      let price = 63500;
+      const labels = [];
+      const dataPoints = [];
+      const now = new Date();
+      for (let i = 23; i >= 0; i--) {
+        const time = new Date(now.getTime() - i * 3600000);
+        labels.push(time.getHours() + ':00');
+        // realistic volatility
+        price += (Math.random() - 0.48) * 180;
+        dataPoints.push(price);
+      }
+      // ensure last price matches display ~ 64320
+      dataPoints[dataPoints.length - 1] = 64320;
+      dataPoints[dataPoints.length - 2] = 64240;
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'BTC/USD',
+            data: dataPoints,
+            borderColor: '#1a5cff',
+            backgroundColor: 'rgba(26, 92, 255, 0.05)',
+            borderWidth: 2.5,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            tension: 0.2,
+            fill: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          
